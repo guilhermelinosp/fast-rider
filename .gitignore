@@ -1,0 +1,92 @@
+# ============================================================
+# Flutter / Dart / Pub
+# ============================================================
+.dart_tool/
+.pub-cache/
+.pub/
+build/
+coverage/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# Symbolication / obfuscation
+app.*.symbols
+app.*.map.json
+
+# iOS / macOS / Xcode
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.*
+*.ipa
+*.dSYM.zip
+*.dSYM
+**/xcuserdata/
+**/*.xcworkspace/xcuserdata/
+**/Pods/
+**/DerivedData/
+**/build/
+
+# Web
+/web/backend/flutter_export_environment.sh
+
+# ============================================================
+# Editors / IDEs
+# ============================================================
+# IntelliJ / Android Studio / GoLand
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code (opcional: descomente para ignorar configs locais)
+.vscode/*.local.json
+#.vscode/
+
+# JetBrains run configurations locais
+.idea/runConfigurations/
+
+# ============================================================
+# Código gerado / schemas locais
+# ============================================================
+**/generated_plugin_registrant.dart
+
+# ============================================================
+# Ferramentas de IA (Codex, Claude, etc.) — configs locais
+# ============================================================
+.codex/
+.claude/
+.ai/
+.agents/
+
+# ============================================================
+# Sistema e utilitários
+# ============================================================
+.DS_Store
+*.log
+*.pyc
+*.class
+*.swp
+*.swo
+*~
+.env
+.env.*
+!.env.example
+
+# ============================================================
+# Testes / cobertura
+# ============================================================
+test/.test_results/
+*.test.xml
+
+# ============================================================
+# Arquivos temporários / miscelânea
+# ============================================================
+migrate_working_dir/
+.temp/
+tmp/
