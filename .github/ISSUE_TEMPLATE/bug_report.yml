@@ -1,0 +1,60 @@
+name: Bug report
+description: Reporte um problema para ajudar a melhorar o Fast Rider
+title: "[bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Obrigado por reportar! Preencha o máximo possível para reprodutibilidade."
+  - type: input
+    id: version
+    attributes:
+      label: Versão do app
+      description: "Versão exibida no pubspec.yaml (ex.: 1.0.0+1)"
+      placeholder: "1.0.0+1"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plataforma
+      description: Onde o bug foi observado
+      options:
+        - iOS Simulator
+        - iOS (dispositivo físico)
+        - Outro
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do problema
+      description: O que aconteceu e o que era esperado?
+      placeholder: "Ao buscar um endereço, o app trava..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Passos para reproduzir
+      description: Passo a passo para chegar no problema
+      placeholder: |
+        1. Abrir o app
+        2. Digitar endereço em Origem
+        3. Buscar
+        4. Bug
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Cole logs do console, error output ou screenshots
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Validações
+      options:
+        - label: Reproduzi o bug com a versão mais recente do main
+        - label: Capturei logs ou screenshot

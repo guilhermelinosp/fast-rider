@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Segurança
+    url: https://github.com/guilhermelinosp/fast-rider/security/policy
+    about: Reporte vulnerabilidades de segurança aqui
+  - name: Discussões
+    url: https://github.com/guilhermelinosp/fast-rider/discussions
+    about: Tire dúvidas e discuta no GitHub Discussions

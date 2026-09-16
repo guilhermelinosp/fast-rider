@@ -1,0 +1,21 @@
+title: "Perguntas e Respostas"
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Faça uma pergunta sobre este projeto.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Pergunta
+      description: O que você gostaria de saber?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto
+      description: Adicione qualquer contexto que ajude a responder sua pergunta.

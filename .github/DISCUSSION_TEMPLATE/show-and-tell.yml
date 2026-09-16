@@ -1,0 +1,27 @@
+title: "Mostre e Conte"
+labels: [show-and-tell]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compartilhe o que você construiu com este projeto.
+
+  - type: textarea
+    id: work
+    attributes:
+      label: O que você construiu?
+      description: Descreva o que você construiu usando este projeto.
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: Link para o seu projeto (se público).
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Algum feedback sobre o projeto baseado na sua experiência?

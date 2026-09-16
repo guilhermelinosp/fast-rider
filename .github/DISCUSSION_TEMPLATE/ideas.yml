@@ -1,0 +1,21 @@
+title: "Ideia"
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compartilhe suas ideias para este projeto.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Ideia
+      description: Descreva sua ideia.
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Pensamentos de implementação
+      description: Alguma ideia de como implementar isso?

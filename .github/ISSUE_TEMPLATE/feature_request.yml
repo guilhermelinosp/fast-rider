@@ -1,0 +1,35 @@
+name: Feature request
+description: Sugira uma nova funcionalidade ou melhoria
+title: "[feat]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: "Descreva a funcionalidade que você gostaria de ver."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema / contexto
+      description: Qual situação motivou este pedido?
+      placeholder: "Quando uso o app, sinto falta de..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução proposta
+      description: Como você imagina a funcionalidade?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Há outras formas de resolver?
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Escopo
+      options:
+        - label: Estou disposto a implementar
+        - label: A mudança afeta o contrato HTTP (backend)

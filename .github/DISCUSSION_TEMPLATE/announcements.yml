@@ -1,0 +1,15 @@
+title: "Anúncio"
+labels: [announcement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use este template para anúncios do projeto.
+
+  - type: textarea
+    id: announcement
+    attributes:
+      label: Anúncio
+      description: O que você gostaria de anunciar?
+    validations:
+      required: true

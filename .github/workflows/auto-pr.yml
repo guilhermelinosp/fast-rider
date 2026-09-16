@@ -1,0 +1,41 @@
+name: auto-pr
+
+on:
+  push:
+    branches:
+      - "feat/**"
+      - "fix/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Open PR from branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          BASE="main"
+          # Sanity check: repo-token can't create a PR from the same branch it's on.
+          if [ "$BRANCH" = "$BASE" ]; then
+            echo "On $BASE, nothing to do."
+            exit 0
+          fi
+          if gh pr view "$BRANCH" --json number -q .number >/dev/null 2>&1; then
+            echo "PR already exists for $BRANCH."
+            exit 0
+          fi
+          gh pr create \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --title "chore: merge $BRANCH into $BASE" \
+            --body "Automated PR created by the auto-pr workflow from branch \`$BRANCH\`." \
+            --label dependencies
