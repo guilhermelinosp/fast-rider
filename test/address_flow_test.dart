@@ -5,7 +5,7 @@ import 'package:fast_rider/api/ride_api_client.dart';
 import 'package:fast_rider/location/current_location.dart';
 import 'package:fast_rider/models/ride.dart';
 import 'package:fast_rider/pages/ride_page.dart';
-import 'package:fast_rider/ride_theme.dart';
+import 'package:fast_rider/theme.dart';
 import 'package:fast_rider/widgets/ride_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
