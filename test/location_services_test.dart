@@ -31,6 +31,11 @@ final routeJson = {
   ],
 };
 
+// AppConfig has no defaults; tests supply explicit endpoints/user-agent.
+const geoBaseUrl = 'https://geo.example/search';
+const routeBaseUrl = 'https://route.example/';
+const testUserAgent = 'FastRiderTests/1.0';
+
 class TestClock {
   DateTime value = DateTime.utc(2026);
   final waits = <Duration>[];
@@ -89,8 +94,18 @@ void main() {
       if (++count == 1) throw http.ClientException('offline');
       return http.Response('[]', 200);
     });
-    final first = NominatimGeocoder(client: httpClient, scheduler: scheduler);
-    final second = NominatimGeocoder(client: httpClient, scheduler: scheduler);
+    final first = NominatimGeocoder(
+      client: httpClient,
+      scheduler: scheduler,
+      baseUrl: geoBaseUrl,
+      userAgent: testUserAgent,
+    );
+    final second = NominatimGeocoder(
+      client: httpClient,
+      scheduler: scheduler,
+      baseUrl: geoBaseUrl,
+      userAgent: testUserAgent,
+    );
     await expectLater(first.search('A'), failure('connection_error'));
     await Future.wait([first.search('B'), second.search('C')]);
     expect(starts.map((t) => t.difference(starts.first).inSeconds), [0, 1, 2]);
@@ -103,6 +118,8 @@ void main() {
       var calls = 0;
       final client = NominatimGeocoder(
         scheduler: TestClock().scheduler(),
+        baseUrl: geoBaseUrl,
+        userAgent: testUserAgent,
         client: MockClient((_) {
           calls++;
           return pending.future;
@@ -127,6 +144,8 @@ void main() {
     test('geocoding rejects malformed payload $body', () async {
       final client = NominatimGeocoder(
         scheduler: TestClock().scheduler(),
+        baseUrl: geoBaseUrl,
+        userAgent: testUserAgent,
         client: MockClient((_) async => http.Response(body, 200)),
       );
       await expectLater(client.search('Rua'), failure('malformed_response'));
@@ -140,6 +159,8 @@ void main() {
       var calls = 0;
       final client = NominatimGeocoder(
         scheduler: clock.scheduler(),
+        baseUrl: geoBaseUrl,
+        userAgent: testUserAgent,
         client: MockClient((_) async {
           calls++;
           return calls == 1
@@ -157,7 +178,8 @@ void main() {
   test('routing sends lon,lat and decodes real GeoJSON shape including intermediate points', () async {
     late Uri url;
     final client = OsrmRouter(
-      baseUrl: 'https://route.example/',
+      baseUrl: routeBaseUrl,
+      userAgent: testUserAgent,
       client: MockClient((r) async {
         url = r.url;
         return http.Response(jsonEncode(routeJson), 200);
@@ -175,6 +197,8 @@ void main() {
   for (final body in ['{"code":"NoRoute"}', '{"code":"Ok","routes":[]}']) {
     test('no route never synthesizes straight line: $body', () async {
       final client = OsrmRouter(
+        baseUrl: routeBaseUrl,
+        userAgent: testUserAgent,
         client: MockClient((_) async => http.Response(body, 200)),
       );
       await expectLater(client.route(a, b), failure('no_route'));
@@ -188,6 +212,8 @@ void main() {
   ]) {
     test('routing malformed/provider errors: $body', () async {
       final client = OsrmRouter(
+        baseUrl: routeBaseUrl,
+        userAgent: testUserAgent,
         client: MockClient((_) async => http.Response(body, 200)),
       );
       await expectLater(client.route(a, b), throwsA(isA<LocationException>()));
@@ -196,11 +222,15 @@ void main() {
 
   test('route timeout and HTTP failures are typed', () async {
     final timeout = OsrmRouter(
+      baseUrl: routeBaseUrl,
+      userAgent: testUserAgent,
       timeout: Duration.zero,
       client: MockClient((_) => Completer<http.Response>().future),
     );
     await expectLater(timeout.route(a, b), failure('timeout'));
     final unavailable = OsrmRouter(
+      baseUrl: routeBaseUrl,
+      userAgent: testUserAgent,
       client: MockClient((_) async => http.Response('unavailable', 503)),
     );
     await expectLater(unavailable.route(a, b), failure('http_error'));

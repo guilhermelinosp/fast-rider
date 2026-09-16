@@ -47,9 +47,9 @@ e contratar um provedor adequado ao volume/SLA, se necessário.
   entre inícios, deduplicação de buscas pendentes e cache em memória de até
   100 consultas por dez minutos. HTTP 429/503 respeita `Retry-After` antes de
   futuras buscas (sem repetir automaticamente a requisição que falhou).
-- Endpoints configuráveis via `--dart-define`: `GEOCODING_URL` (padrão
-  `https://nominatim.openstreetmap.org/search`), `ROUTING_URL` (padrão
-  `https://router.project-osrm.org`) e `MAPS_USER_AGENT` (identificação do app).
+- Endpoints configuráveis via `--dart-define`: `GEOCODING_URL`, `ROUTING_URL`,
+  `MAPS_USER_AGENT`, `GEOCODING_ATTRIBUTION` e `ROUTING_ATTRIBUTION`. Todas as
+  chaves são **obrigatórias** — o app não inicia sem elas.
 - Serviços públicos de demonstração, sem SLA. Antes de distribuir, revisar a
   [política Nominatim](https://operations.osmfoundation.org/policies/nominatim/),
   limites agregados entre usuários e identificação/contato do app; considerar
@@ -97,49 +97,36 @@ malformada recebem códigos locais (`timeout`, `connection_error` e
 
 O desenvolvimento e a validação são feitos no **iOS Simulator**.
 
-## Base URL e execução
+## Configuração local via `.env`
 
-`API_BASE_URL` é configurável por `--dart-define` e centralizado em
-`lib/config/app_config.dart`:
-
-- iOS Simulator: `http://localhost:8080` (default).
-
-O backend deve estar acessível na rede do dispositivo e aceitar a porta 8080.
+Todas as chaves são lidas em tempo de compilação via `--dart-define-from-file`
+e centralizadas em `lib/config/app_config.dart`. **Todas são obrigatórias** —
+`AppConfig.validate()` falha no startup se alguma estiver ausente, listando
+exatamente quais faltam.
 
 ```bash
-flutter pub get
-open -a Simulator
-flutter devices
-flutter run -d <ios-simulator-id>
-```
-
-### Configuração local via `.env`
-
-Copie o modelo e preencha os valores **sem commitar**:
-
-```bash
-cp .env.example .env
-```
-
-O projeto lê as chaves em tempo de compilação via `--dart-define-from-file`:
-
-```bash
+cp .env.example .env   # preencha TODOS os valores (sem commitar .env)
 flutter run --dart-define-from-file=.env
 flutter build ios --dart-define-from-file=.env
 ```
 
+<<<<<<< HEAD
 Chaves suportadas (todas opcionais em runtime, com defaults; **`API_BASE_URL` é
 a única sem valor padrão embutido e deve ser definida** para builds de
 produção):
+=======
+| Chave | Uso |
+|---|---|
+| `API_BASE_URL` | Backend de corridas |
+| `GEOCODING_URL` | Busca de endereços (Nominatim-compatible `/search`) |
+| `ROUTING_URL` | Cálculo de rota (OSRM-compatible) |
+| `MAPS_USER_AGENT` | Identificação OSM (ex.: `fast_rider/1.0 (dev)`) |
+| `GEOCODING_ATTRIBUTION` | Atribuição do mapa (ex.: `Busca: Nominatim`) |
+| `ROUTING_ATTRIBUTION` | Atribuição do mapa (ex.: `Rota: OSRM`) |
+>>>>>>> origin/main
 
-| Chave | Default | Uso |
-|---|---|---|
-| `API_BASE_URL` | `http://localhost:8080` | Backend de corridas |
-| `GEOCODING_URL` | Nominatim público | Busca de endereços |
-| `ROUTING_URL` | OSRM público | Cálculo de rota |
-| `MAPS_USER_AGENT` | `fast_rider/1.0 ...` | Identificação OSM |
-| `GEOCODING_ATTRIBUTION` | `Busca: Nominatim` | Atribuição no mapa |
-| `ROUTING_ATTRIBUTION` | `Rota: OSRM` | Atribuição no mapa |
+No iOS Simulator, `API_BASE_URL` aponta tipicamente para
+`http://localhost:8080`; em dispositivo real, use o IP do host na rede.
 
 > **Importante:** valores compilados no app não são segredos reais — podem ser
 > extraídos do binário. Use `.env` para **configuração** (URLs, user-agent).
@@ -180,7 +167,10 @@ conventional commits e o fluxo com hooks locais ([lefthook](https://lefthook.dev
 
 ## Licença
 
-Todos os direitos reservados — veja [LICENSE](LICENSE).
+**Proprietária — Todos os direitos reservados.** Este projeto é de propriedade
+exclusiva de seu autor e **não é open source**: é proibida a reprodução,
+distribuição, modificação ou replicação do código e do design sem autorização
+prévia e por escrito. Veja [LICENSE](LICENSE).
 
 ## Design
 

@@ -3,7 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:fast_rider/api/location_services.dart';
-import 'package:fast_rider/ride_theme.dart';
+import 'package:fast_rider/theme.dart';
 
 /// Mapa exclusivamente de exibição: sem zoom, arrasto, rotação ou seleção.
 ///

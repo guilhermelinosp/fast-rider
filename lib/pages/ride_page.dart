@@ -7,7 +7,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:fast_rider/api/location_services.dart';
 import 'package:fast_rider/api/ride_api_client.dart';
 import 'package:fast_rider/location/current_location.dart';
-import 'package:fast_rider/ride_theme.dart';
+import 'package:fast_rider/theme.dart';
 import 'package:fast_rider/widgets/ride_map.dart';
 
 class RidePage extends StatefulWidget {
@@ -197,9 +197,6 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
     setState(() {
       _invalidateDestination();
       _destination.busy = query.isNotEmpty;
-      if (query.isEmpty) {
-        _destination.message = 'Digite um destino para buscar.';
-      }
     });
     if (query.isEmpty) return;
 
