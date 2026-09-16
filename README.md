@@ -1,5 +1,7 @@
 # Fast Rider 🛵
 
+[![CI](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml/badge.svg)](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml)
+
 Menor vertical slice Flutter do Rider: busca endereços, calcula uma rota viária
 e exibe uma prévia OpenStreetMap antes de solicitar uma corrida ao backend
 configurado. O app usa `StatefulWidget`/`setState` e não usa state management
@@ -108,6 +110,11 @@ flutter run --dart-define-from-file=.env
 flutter build ios --dart-define-from-file=.env
 ```
 
+<<<<<<< HEAD
+Chaves suportadas (todas opcionais em runtime, com defaults; **`API_BASE_URL` é
+a única sem valor padrão embutido e deve ser definida** para builds de
+produção):
+=======
 | Chave | Uso |
 |---|---|
 | `API_BASE_URL` | Backend de corridas |
@@ -116,6 +123,7 @@ flutter build ios --dart-define-from-file=.env
 | `MAPS_USER_AGENT` | Identificação OSM (ex.: `fast_rider/1.0 (dev)`) |
 | `GEOCODING_ATTRIBUTION` | Atribuição do mapa (ex.: `Busca: Nominatim`) |
 | `ROUTING_ATTRIBUTION` | Atribuição do mapa (ex.: `Rota: OSRM`) |
+>>>>>>> origin/main
 
 No iOS Simulator, `API_BASE_URL` aponta tipicamente para
 `http://localhost:8080`; em dispositivo real, use o IP do host na rede.
