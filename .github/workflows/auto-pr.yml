@@ -13,29 +13,7 @@ permissions:
 
 jobs:
   create-pr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: Open PR from branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BRANCH="${{ github.ref_name }}"
-          BASE="main"
-          # Sanity check: repo-token can't create a PR from the same branch it's on.
-          if [ "$BRANCH" = "$BASE" ]; then
-            echo "On $BASE, nothing to do."
-            exit 0
-          fi
-          if gh pr view "$BRANCH" --json number -q .number >/dev/null 2>&1; then
-            echo "PR already exists for $BRANCH."
-            exit 0
-          fi
-          gh pr create \
-            --base "$BASE" \
-            --head "$BRANCH" \
-            --title "chore: merge $BRANCH into $BASE" \
-            --body "Automated PR created by the auto-pr workflow from branch \`$BRANCH\`." \
-            --label dependencies
+    uses: guilhermelinosp/templates/.github/workflows/auto-pr.yml@8f299961846cf1d0cbf7129a99ea6c3095ec3abd
+    with:
+      app-client-id: ${{ vars.HELLNET_ACTIONS_CLIENT_ID }}
+    secrets: inherit
