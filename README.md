@@ -1,5 +1,7 @@
 # Fast Rider 🛵
 
+[![CI](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml/badge.svg)](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml)
+
 Menor vertical slice Flutter do Rider: busca endereços, calcula uma rota viária
 e exibe uma prévia OpenStreetMap antes de solicitar uma corrida ao backend
 configurado. O app usa `StatefulWidget`/`setState` e não usa state management
@@ -126,7 +128,9 @@ flutter run --dart-define-from-file=.env
 flutter build ios --dart-define-from-file=.env
 ```
 
-Chaves suportadas (todas opcionais, com defaults no `AppConfig`):
+Chaves suportadas (todas opcionais em runtime, com defaults; **`API_BASE_URL` é
+a única sem valor padrão embutido e deve ser definida** para builds de
+produção):
 
 | Chave | Default | Uso |
 |---|---|---|
@@ -176,7 +180,7 @@ conventional commits e o fluxo com hooks locais ([lefthook](https://lefthook.dev
 
 ## Licença
 
-MIT — veja [LICENSE](LICENSE).
+Todos os direitos reservados — veja [LICENSE](LICENSE).
 
 ## Design
 
