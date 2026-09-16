@@ -5,6 +5,8 @@ e exibe uma prévia OpenStreetMap antes de solicitar uma corrida ao backend
 configurado. O app usa `StatefulWidget`/`setState` e não usa state management
 ou repository pattern externo.
 
+[![Design no Figma](https://img.shields.io/badge/Design-Figma-purple)](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245)
+
 ## Selecionar e solicitar
 
 1. O mapa inicia em São Paulo, sem pontos pré-selecionados.
@@ -175,3 +177,9 @@ conventional commits e o fluxo com hooks locais ([lefthook](https://lefthook.dev
 ## Licença
 
 MIT — veja [LICENSE](LICENSE).
+
+## Design
+
+O design de interface está disponível no Figma:
+
+[https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245)
