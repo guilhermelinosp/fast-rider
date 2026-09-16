@@ -159,7 +159,10 @@ conventional commits e o fluxo com hooks locais ([lefthook](https://lefthook.dev
 
 ## Licença
 
-MIT — veja [LICENSE](LICENSE).
+**Proprietária — Todos os direitos reservados.** Este projeto é de propriedade
+exclusiva de seu autor e **não é open source**: é proibida a reprodução,
+distribuição, modificação ou replicação do código e do design sem autorização
+prévia e por escrito. Veja [LICENSE](LICENSE).
 
 ## Design
 
