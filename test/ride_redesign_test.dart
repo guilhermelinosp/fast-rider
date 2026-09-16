@@ -1,4 +1,4 @@
-import 'package:fast_rider/ride_theme.dart';
+import 'package:fast_rider/theme.dart';
 import 'package:fast_rider/widgets/ride_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
