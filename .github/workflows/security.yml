@@ -45,8 +45,11 @@ jobs:
           output: trivy.sarif
 
       - name: Upload Trivy SARIF
+        # Code scanning on private repos requires GitHub Advanced Security (paid).
+        # Analysis still runs and surfaces findings in logs; skip failure on upload.
         if: always() && hashFiles('trivy.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
           category: trivy
