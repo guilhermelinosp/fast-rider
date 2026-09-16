@@ -8,6 +8,7 @@ import 'package:fast_rider/ride_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AppConfig.validate();
   final riderId = await RiderIdentity().getOrCreateRiderId();
   final apiClient = HttpRideApiClient(baseUrl: AppConfig.baseUrl);
   runApp(RiderApp(apiClient: apiClient, riderId: riderId));

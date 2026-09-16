@@ -197,9 +197,6 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
     setState(() {
       _invalidateDestination();
       _destination.busy = query.isNotEmpty;
-      if (query.isEmpty) {
-        _destination.message = 'Digite um destino para buscar.';
-      }
     });
     if (query.isEmpty) return;
 
