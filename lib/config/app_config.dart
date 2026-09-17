@@ -1,55 +1,86 @@
-/// Compile-time configuration injected via `--dart-define-from-file`.
+/// Runtime configuration backed by optional compile-time overrides.
 ///
-/// Every value is **required** — call [validate] at app startup to fail fast
-/// with a clear message when any environment variable is missing.
-///
-/// Usage:
-/// ```bash
-/// cp .env.example .env   # fill in ALL values
-/// flutter run --dart-define-from-file=.env
-/// ```
-class AppConfig {
-  AppConfig._();
+/// The public provider defaults are non-secret, so a normal `flutter run` or
+/// build starts without a `.env` file. Deployments can still replace them with
+/// `--dart-define` or `--dart-define-from-file`.
+final class AppConfig {
+  const AppConfig({
+    this.geocodingUrl = const String.fromEnvironment(
+      'GEOCODING_URL',
+      defaultValue: 'https://nominatim.openstreetmap.org/search',
+    ),
+    this.routingUrl = const String.fromEnvironment(
+      'ROUTING_URL',
+      defaultValue: 'https://router.project-osrm.org',
+    ),
+    this.tileUrl = const String.fromEnvironment(
+      'MAP_TILE_URL',
+      defaultValue: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    ),
+    this.mapsUserAgent = const String.fromEnvironment(
+      'MAPS_USER_AGENT',
+      defaultValue: 'com.guilhermelino.fastrider/1.0.0',
+    ),
+    this.tileUserAgentPackageName = 'com.guilhermelino.fastrider',
+  });
 
-  /// Base URL for the ride backend API.
-  static const String baseUrl = String.fromEnvironment('API_BASE_URL');
+  final String geocodingUrl;
+  final String routingUrl;
+  final String tileUrl;
+  final String mapsUserAgent;
 
-  /// Geocoding endpoint (Nominatim-compatible `/search`).
-  static const String geocodingUrl = String.fromEnvironment('GEOCODING_URL');
+  /// Package identifier used by flutter_map to form its tile User-Agent.
+  final String tileUserAgentPackageName;
 
-  /// Routing endpoint (OSRM-compatible).
-  static const String routingUrl = String.fromEnvironment('ROUTING_URL');
+  /// Fails early only for malformed overrides, never for omitted defines.
+  void validate() {
+    _validateHttpUrl('GEOCODING_URL', geocodingUrl);
+    _validateHttpUrl('ROUTING_URL', routingUrl);
+    _validateHttpUrl('MAP_TILE_URL', tileUrl);
 
-  /// User-Agent sent to OSM providers (required by their usage policy).
-  static const String mapsUserAgent = String.fromEnvironment('MAPS_USER_AGENT');
-
-  /// Attribution text for the geocoding provider (required by Nominatim).
-  static const String geocodingAttribution = String.fromEnvironment(
-    'GEOCODING_ATTRIBUTION',
-  );
-
-  /// Attribution text for the routing provider (required by OSRM).
-  static const String routingAttribution = String.fromEnvironment(
-    'ROUTING_ATTRIBUTION',
-  );
-
-  /// Checks that every required env var was provided.
-  ///
-  /// Call this **once** at the top of `main()` before using any field.
-  /// Throws [StateError] with the exact command to fix the issue.
-  static void validate() {
-    final missing = <String>[
-      if (baseUrl.isEmpty) 'API_BASE_URL',
-      if (geocodingUrl.isEmpty) 'GEOCODING_URL',
-      if (routingUrl.isEmpty) 'ROUTING_URL',
-      if (mapsUserAgent.isEmpty) 'MAPS_USER_AGENT',
-      if (geocodingAttribution.isEmpty) 'GEOCODING_ATTRIBUTION',
-      if (routingAttribution.isEmpty) 'ROUTING_ATTRIBUTION',
-    ];
-    if (missing.isNotEmpty) {
+    const placeholders = ['{z}', '{x}', '{y}'];
+    if (!placeholders.every(tileUrl.contains)) {
       throw StateError(
-        'AppConfig: missing required env vars: ${missing.join(', ')}\n'
-        'Fix: cp .env.example .env && flutter run --dart-define-from-file=.env',
+        'AppConfig: MAP_TILE_URL must contain {z}, {x}, and {y}.',
+      );
+    }
+
+    _validateHeaderValue('MAPS_USER_AGENT', mapsUserAgent);
+    if (!_packageName.hasMatch(tileUserAgentPackageName)) {
+      throw StateError(
+        'AppConfig: tile User-Agent package must be a reverse-DNS identifier.',
+      );
+    }
+  }
+
+  static final RegExp _headerControlCharacters = RegExp(
+    r'[\u0000-\u001F\u007F]',
+  );
+  static final RegExp _packageName = RegExp(
+    r'^[A-Za-z0-9]+(?:[._-][A-Za-z0-9]+)+$',
+  );
+
+  static void _validateHttpUrl(String name, String value) {
+    final uri = Uri.tryParse(value);
+    if (value != value.trim() ||
+        uri == null ||
+        !const {'https', 'http'}.contains(uri.scheme) ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasFragment) {
+      throw StateError(
+        'AppConfig: $name must be an absolute HTTP(S) URL without credentials or fragments.',
+      );
+    }
+  }
+
+  static void _validateHeaderValue(String name, String value) {
+    if (value != value.trim() ||
+        value.isEmpty ||
+        value.length > 256 ||
+        _headerControlCharacters.hasMatch(value)) {
+      throw StateError(
+        'AppConfig: $name must be a non-empty HTTP header value.',
       );
     }
   }

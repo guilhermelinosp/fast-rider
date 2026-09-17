@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'package:fast_rider/api/location_services.dart';
-import 'package:fast_rider/api/ride_api_client.dart';
+import 'package:fast_rider/config/app_config.dart';
 import 'package:fast_rider/location/current_location.dart';
 import 'package:fast_rider/theme.dart';
 import 'package:fast_rider/widgets/ride_map.dart';
@@ -13,18 +13,14 @@ import 'package:fast_rider/widgets/ride_map.dart';
 class RidePage extends StatefulWidget {
   const RidePage({
     super.key,
-    required this.apiClient,
-    required this.riderId,
+    this.config = const AppConfig(),
     this.geocoder,
     this.router,
     this.tileProvider,
     this.currentLocation,
   });
 
-  /// Kept for compatibility with the existing app composition. This preview
-  /// screen never creates a ride.
-  final RideApiClient apiClient;
-  final String riderId;
+  final AppConfig config;
   final Geocoder? geocoder;
   final RoadRouter? router;
   final TileProvider? tileProvider;
@@ -45,8 +41,10 @@ class _AddressInput {
 class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
   final _destination = _AddressInput();
   final _destinationSurfaceKey = GlobalKey();
-  late final Geocoder _geocoder = widget.geocoder ?? NominatimGeocoder();
-  late final RoadRouter _router = widget.router ?? OsrmRouter();
+  late final Geocoder _geocoder =
+      widget.geocoder ?? NominatimGeocoder(config: widget.config);
+  late final RoadRouter _router =
+      widget.router ?? OsrmRouter(config: widget.config);
   late final CurrentLocation _location =
       widget.currentLocation ?? deviceCurrentLocation();
 
@@ -290,9 +288,22 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
   void _showMapError() {
     if (!mounted || _mapErrorShown) return;
     _mapErrorShown = true;
+    final media = MediaQuery.of(context);
+    final safe = media.padding;
+    final keyboard = media.viewInsets;
+    final bottomInset = keyboard.bottom > safe.bottom
+        ? keyboard.bottom
+        : safe.bottom;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.fromLTRB(
+          safe.left + 16,
+          0,
+          safe.right + 16,
+          bottomInset + 16 + _destinationHeight + 8,
+        ),
+        content: const Text(
           'Não foi possível carregar parte do mapa. Verifique sua conexão.',
         ),
       ),
@@ -397,6 +408,9 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
           children: [
             Positioned.fill(
               child: RideMap(
+                tileUrl: widget.config.tileUrl,
+                tileUserAgentPackageName:
+                    widget.config.tileUserAgentPackageName,
                 pickup: _pickup?.point,
                 destination: _destination.selected?.point,
                 route: _route,

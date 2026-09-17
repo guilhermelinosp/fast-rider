@@ -148,7 +148,8 @@ class IosSinglePosition {
     try {
       final data = await channel.invokeMapMethod<String, dynamic>('capture', {
         'id': id,
-        'timeoutMs': settings.timeLimit!.inMilliseconds,
+        'timeoutMs':
+            (settings.timeLimit ?? const Duration(seconds: 15)).inMilliseconds,
       });
       if (data == null) {
         throw const CurrentLocationException(LocationFailure.invalid);
@@ -162,6 +163,12 @@ class IosSinglePosition {
         'serviceDisabled' => LocationFailure.serviceDisabled,
         _ => LocationFailure.unavailable,
       });
+    } on MissingPluginException {
+      throw const CurrentLocationException(LocationFailure.unavailable);
+    } on CurrentLocationException {
+      rethrow;
+    } catch (_) {
+      throw const CurrentLocationException(LocationFailure.unavailable);
     } finally {
       attempt.onCancel = null;
     }

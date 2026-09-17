@@ -22,8 +22,7 @@ void main() {
     final gps = FakeLocation()..respond = () async => fix();
     final geocoder = FakeGeocoder();
     final router = FakeRouter();
-    final api = FakeRides();
-    await mount(tester, geocoder, router, api, location: gps);
+    await mount(tester, geocoder, router, location: gps);
 
     expect(gps.calls, 1);
     expect(rideMap(tester).pickup, originPoint);
@@ -37,7 +36,6 @@ void main() {
     expect(geocoder.queries, [destination.label]);
     expect(router.requests, [(originPoint, destinationPoint)]);
     expect(rideMap(tester).route, isNotNull);
-    expect(api.requests, isEmpty);
   });
 
   for (final reason in [
@@ -56,8 +54,7 @@ void main() {
         ..respond = () async => throw CurrentLocationException(reason);
       final geocoder = FakeGeocoder();
       final router = FakeRouter();
-      final api = FakeRides();
-      await mount(tester, geocoder, router, api, location: gps);
+      await mount(tester, geocoder, router, location: gps);
 
       expect(
         destinationDecoration(tester).errorText,
@@ -79,7 +76,6 @@ void main() {
       expect(rideMap(tester).destination, destinationPoint);
       expect(router.requests, [(originPoint, destinationPoint)]);
       expect(destinationDecoration(tester).errorText, isNull);
-      expect(api.requests, isEmpty);
     });
   }
 
@@ -89,14 +85,7 @@ void main() {
       final pending = Completer<LocationFix>();
       final gps = FakeLocation()..respond = () => pending.future;
       final router = FakeRouter();
-      await mount(
-        tester,
-        FakeGeocoder(),
-        router,
-        FakeRides(),
-        location: gps,
-        settle: false,
-      );
+      await mount(tester, FakeGeocoder(), router, location: gps, settle: false);
 
       expect(destinationDecoration(tester).helperText, contains('localização'));
       await submitDestination(tester, destination.label, settle: false);
@@ -121,14 +110,7 @@ void main() {
     final first = Completer<LocationFix>();
     final gps = FakeLocation()..respond = () => first.future;
     final router = FakeRouter();
-    await mount(
-      tester,
-      FakeGeocoder(),
-      router,
-      FakeRides(),
-      location: gps,
-      settle: false,
-    );
+    await mount(tester, FakeGeocoder(), router, location: gps, settle: false);
     await tester.pump(const Duration(seconds: 31));
     await tester.pumpAndSettle();
 
@@ -154,13 +136,7 @@ void main() {
     final gps = FakeLocation()
       ..respond = () async =>
           throw const CurrentLocationException(LocationFailure.denied);
-    await mount(
-      tester,
-      FakeGeocoder(),
-      FakeRouter(),
-      FakeRides(),
-      location: gps,
-    );
+    await mount(tester, FakeGeocoder(), FakeRouter(), location: gps);
 
     gps.respond = () async => fix(accuracy: 300);
     await submitDestination(tester, destination.label);
@@ -180,14 +156,7 @@ void main() {
     final first = Completer<LocationFix>();
     final gps = FakeLocation()..respond = () => first.future;
     final router = FakeRouter();
-    await mount(
-      tester,
-      FakeGeocoder(),
-      router,
-      FakeRides(),
-      location: gps,
-      settle: false,
-    );
+    await mount(tester, FakeGeocoder(), router, location: gps, settle: false);
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
     expect(gps.attempts.single.cancelled, isFalse);
@@ -220,7 +189,6 @@ void main() {
         tester,
         FakeGeocoder(),
         FakeRouter(),
-        FakeRides(),
         location: gps,
         settle: false,
       );
