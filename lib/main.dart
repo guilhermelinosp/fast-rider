@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 
-import 'package:fast_rider/api/ride_api_client.dart';
+import 'package:fast_rider/api/location_services.dart';
 import 'package:fast_rider/config/app_config.dart';
-import 'package:fast_rider/identity/rider_identity.dart';
+import 'package:fast_rider/location/current_location.dart';
 import 'package:fast_rider/pages/ride_page.dart';
 import 'package:fast_rider/theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  AppConfig.validate();
-  final riderId = await RiderIdentity().getOrCreateRiderId();
-  final apiClient = HttpRideApiClient(baseUrl: AppConfig.baseUrl);
-  runApp(RiderApp(apiClient: apiClient, riderId: riderId));
+  const config = AppConfig();
+  config.validate();
+  runApp(const RiderApp(config: config));
 }
 
 class RiderApp extends StatelessWidget {
-  const RiderApp({super.key, required this.apiClient, required this.riderId});
+  const RiderApp({
+    super.key,
+    this.config = const AppConfig(),
+    this.geocoder,
+    this.router,
+    this.tileProvider,
+    this.currentLocation,
+  });
 
-  final RideApiClient apiClient;
-  final String riderId;
+  final AppConfig config;
+  final Geocoder? geocoder;
+  final RoadRouter? router;
+  final TileProvider? tileProvider;
+  final CurrentLocation? currentLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +36,13 @@ class RiderApp extends StatelessWidget {
       title: 'Fast Rider',
       debugShowCheckedModeBanner: false,
       theme: RideTheme.data,
-      home: RidePage(apiClient: apiClient, riderId: riderId),
+      home: RidePage(
+        config: config,
+        geocoder: geocoder,
+        router: router,
+        tileProvider: tileProvider,
+        currentLocation: currentLocation,
+      ),
     );
   }
 }

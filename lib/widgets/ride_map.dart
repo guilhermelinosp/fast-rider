@@ -13,6 +13,8 @@ import 'package:fast_rider/theme.dart';
 class RideMap extends StatefulWidget {
   const RideMap({
     super.key,
+    required this.tileUrl,
+    required this.tileUserAgentPackageName,
     this.pickup,
     this.destination,
     this.route,
@@ -22,6 +24,8 @@ class RideMap extends StatefulWidget {
     this.onTileError,
   });
 
+  final String tileUrl;
+  final String tileUserAgentPackageName;
   final LatLng? pickup;
   final LatLng? destination;
   final RoadRoute? route;
@@ -202,8 +206,8 @@ class _RideMapState extends State<RideMap> {
                 0,
               ]),
               child: TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'fast_rider',
+                urlTemplate: widget.tileUrl,
+                userAgentPackageName: widget.tileUserAgentPackageName,
                 maxNativeZoom: 18,
                 tileProvider: widget.tileProvider,
                 errorTileCallback: (_, _, _) => _onTileError(),
@@ -277,11 +281,11 @@ class _RideMapState extends State<RideMap> {
                       vertical: 1,
                     ),
                     child: Text(
-                      '© OpenStreetMap',
+                      '© OpenStreetMap contributors · ODbL',
                       key: const Key('osm_attribution'),
                       style: TextStyle(
-                        fontSize: 9,
-                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 10,
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ),

@@ -92,8 +92,7 @@ void main() {
     );
     addTearDown(tester.view.resetPadding);
     final geocoder = FakeGeocoder();
-    final api = FakeRides();
-    await mount(tester, geocoder, FakeRouter(), api, size: size);
+    await mount(tester, geocoder, FakeRouter(), size: size);
 
     final theme = Theme.of(tester.element(find.byType(RideMap)));
     expect(theme.brightness, Brightness.dark);
@@ -104,14 +103,13 @@ void main() {
     expectOnScreen(tester, find.byKey(const Key('osm_attribution')), size);
     expectBottomLayout(tester, size, safeBottom: 34, safeTop: 47);
     expect(geocoder.queries, isEmpty);
-    expect(api.requests, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets(
     'only OSM tiles are gray; route, markers and attribution are not',
     (tester) async {
-      await mount(tester, FakeGeocoder(), FakeRouter(), FakeRides());
+      await mount(tester, FakeGeocoder(), FakeRouter());
       await submitDestination(tester, destination.label);
 
       final filter = find.byKey(const Key('graphite-map-tiles'));
@@ -152,6 +150,10 @@ void main() {
       expect(tileLayer.urlTemplate!.toLowerCase(), isNot(contains('carto')));
       expect(tileLayer.urlTemplate!.toLowerCase(), isNot(contains('api_key')));
       expect(tileLayer.urlTemplate!.toLowerCase(), isNot(contains('apikey')));
+      expect(
+        tileLayer.tileProvider.headers['User-Agent'],
+        'flutter_map (com.guilhermelino.fastrider)',
+      );
       final line = tester
           .widget<PolylineLayer>(find.byType(PolylineLayer))
           .polylines
@@ -172,15 +174,7 @@ void main() {
       bottom: 20 * tester.view.devicePixelRatio,
     );
     addTearDown(tester.view.resetPadding);
-    final api = FakeRides();
-    await mount(
-      tester,
-      FakeGeocoder(),
-      FakeRouter(),
-      api,
-      size: size,
-      textScale: 2,
-    );
+    await mount(tester, FakeGeocoder(), FakeRouter(), size: size, textScale: 2);
 
     expectOnlyFloatingInput(tester, size);
     expectBottomLayout(tester, size, safeBottom: 20, safeTop: 20);
@@ -211,7 +205,6 @@ void main() {
     );
     expect(rideMap(tester).destination, destinationPoint);
     expect(rideMap(tester).route, isNotNull);
-    expect(api.requests, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
@@ -226,15 +219,7 @@ void main() {
       bottom: 21 * tester.view.devicePixelRatio,
     );
     addTearDown(tester.view.resetPadding);
-    final api = FakeRides();
-    await mount(
-      tester,
-      FakeGeocoder(),
-      FakeRouter(),
-      api,
-      size: size,
-      textScale: 2,
-    );
+    await mount(tester, FakeGeocoder(), FakeRouter(), size: size, textScale: 2);
 
     expectOnlyFloatingInput(tester, size);
     final field = tester.getRect(find.byKey(const ValueKey('address-1')));
@@ -251,7 +236,6 @@ void main() {
     await submitDestination(tester, destination.label);
     expectBottomLayout(tester, size, safeBottom: 21, safeTop: 12);
     expect(rideMap(tester).route, isNotNull);
-    expect(api.requests, isEmpty);
     expect(tester.takeException(), isNull);
   });
 
@@ -260,7 +244,7 @@ void main() {
   ) async {
     final geocoder = FakeGeocoder()
       ..respond = (_) async => throw StateError('offline');
-    await mount(tester, geocoder, FakeRouter(), FakeRides());
+    await mount(tester, geocoder, FakeRouter());
 
     await submitDestination(tester, 'Destino indisponível');
 
@@ -276,18 +260,55 @@ void main() {
     expectBottomLayout(tester, const Size(390, 844), safeBottom: 0);
   });
 
-  testWidgets('tile failure uses a transient SnackBar, not another overlay', (
-    tester,
-  ) async {
-    await mount(tester, FakeGeocoder(), FakeRouter(), FakeRides());
-    final callback = tester.widget<RideMap>(find.byType(RideMap)).onTileError!;
+  testWidgets(
+    '320x568 tile feedback stays above the input with the keyboard open',
+    (tester) async {
+      const size = Size(320, 568);
+      tester.view.padding = FakeViewPadding(
+        top: 20 * tester.view.devicePixelRatio,
+        bottom: 20 * tester.view.devicePixelRatio,
+      );
+      addTearDown(tester.view.resetPadding);
+      await mount(
+        tester,
+        FakeGeocoder(),
+        FakeRouter(),
+        size: size,
+        textScale: 2,
+      );
 
-    callback();
-    await tester.pump();
+      final field = find.byKey(const ValueKey('address-1'));
+      await tester.tap(field);
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 260 * tester.view.devicePixelRatio,
+      );
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpAndSettle();
 
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.textContaining('parte do mapa'), findsOneWidget);
-    expect(find.byType(TextField), findsOneWidget);
-    expect(find.byKey(const ValueKey('ride-sheet')), findsNothing);
-  });
+      final callback = tester
+          .widget<RideMap>(find.byType(RideMap))
+          .onTileError!;
+
+      callback();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      final snackBar = find.byType(SnackBar);
+      final snackBarSurface = find.descendant(
+        of: snackBar,
+        matching: find.byType(Material),
+      );
+      expect(snackBar, findsOneWidget);
+      expect(snackBarSurface, findsOneWidget);
+      expect(find.textContaining('parte do mapa'), findsOneWidget);
+      expect(
+        tester.getRect(snackBarSurface).bottom,
+        lessThan(tester.getRect(field).top),
+      );
+      expectOnScreen(tester, field, size);
+      expect(field.hitTestable(), findsOneWidget);
+      expect(find.byKey(const ValueKey('ride-sheet')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

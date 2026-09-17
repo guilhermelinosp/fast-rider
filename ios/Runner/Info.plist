@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Usamos sua localização durante o uso para sugerir o ponto de embarque. Você pode editar a origem ou digitá-la sem permitir o acesso.</string>
+	<string>Usamos sua localização durante o uso para definir a origem, centralizar o mapa e calcular a rota até o destino.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

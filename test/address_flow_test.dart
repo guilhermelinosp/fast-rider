@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:fast_rider/api/location_services.dart';
-import 'package:fast_rider/api/ride_api_client.dart';
 import 'package:fast_rider/location/current_location.dart';
-import 'package:fast_rider/models/ride.dart';
 import 'package:fast_rider/pages/ride_page.dart';
 import 'package:fast_rider/theme.dart';
 import 'package:fast_rider/widgets/ride_map.dart';
@@ -62,21 +60,10 @@ class FakeRouter implements RoadRouter {
   }
 }
 
-class FakeRides implements RideApiClient {
-  final requests = <RideRequest>[];
-
-  @override
-  Future<RideResponse> createRide(RideRequest request) {
-    requests.add(request);
-    throw StateError('RidePage must not create rides');
-  }
-}
-
 Future<void> mount(
   WidgetTester tester,
   FakeGeocoder geocoder,
-  FakeRouter router,
-  FakeRides api, {
+  FakeRouter router, {
   Size size = const Size(390, 844),
   double textScale = 1,
   FakeLocation? location,
@@ -93,8 +80,6 @@ Future<void> mount(
         child: child!,
       ),
       home: RidePage(
-        apiClient: api,
-        riderId: 'uuid-test',
         geocoder: geocoder,
         router: router,
         tileProvider: OfflineTiles(),
@@ -143,8 +128,7 @@ void main() {
     (tester) async {
       final geocoder = FakeGeocoder();
       final router = FakeRouter();
-      final api = FakeRides();
-      await mount(tester, geocoder, router, api);
+      await mount(tester, geocoder, router);
 
       await submitDestination(tester, 'Avenida Paulista');
 
@@ -157,7 +141,6 @@ void main() {
       expect(find.text('B'), findsOneWidget);
       expect(find.byType(PolylineLayer), findsOneWidget);
       expect(find.byType(ListTile), findsNothing);
-      expect(api.requests, isEmpty);
     },
   );
 
@@ -167,8 +150,7 @@ void main() {
     final pending = Completer<List<AddressPlace>>();
     final geocoder = FakeGeocoder()..respond = (_) => pending.future;
     final router = FakeRouter();
-    final api = FakeRides();
-    await mount(tester, geocoder, router, api);
+    await mount(tester, geocoder, router);
 
     await typeDestination(tester, 'Paulista');
     expect(geocoder.queries, isEmpty);
@@ -181,7 +163,6 @@ void main() {
     pending.complete([destination, origin]);
     await tester.pumpAndSettle();
     expect(router.requests, hasLength(1));
-    expect(api.requests, isEmpty);
   });
 
   testWidgets('the first valid result is selected automatically', (
@@ -191,7 +172,7 @@ void main() {
     final geocoder = FakeGeocoder()
       ..respond = (_) async => [invalid, destination, origin];
     final router = FakeRouter();
-    await mount(tester, geocoder, router, FakeRides());
+    await mount(tester, geocoder, router);
 
     await submitDestination(tester, 'destino');
 
@@ -216,7 +197,7 @@ void main() {
       ..respond = (query) =>
           query == 'antigo' ? old.future : Future.value([newer]);
     final router = FakeRouter();
-    await mount(tester, geocoder, router, FakeRides());
+    await mount(tester, geocoder, router);
 
     await submitDestination(tester, 'antigo', settle: false);
     await submitDestination(tester, 'novo');
@@ -233,7 +214,7 @@ void main() {
   ) async {
     final pending = Completer<RoadRoute>();
     final router = FakeRouter()..respond = (_, _) => pending.future;
-    await mount(tester, FakeGeocoder(), router, FakeRides());
+    await mount(tester, FakeGeocoder(), router);
 
     await submitDestination(tester, 'primeiro', settle: false);
     await typeDestination(tester, 'segundo');
@@ -252,8 +233,7 @@ void main() {
       ..respond = (_) async =>
           throw const LocationException('offline', 'Sem conexão');
     final router = FakeRouter();
-    final api = FakeRides();
-    await mount(tester, geocoder, router, api);
+    await mount(tester, geocoder, router);
 
     await submitDestination(tester, 'sem rede');
     expect(destinationDecoration(tester).errorText, 'Sem conexão');
@@ -265,14 +245,13 @@ void main() {
     await submitDestination(tester, 'Paulista');
     expect(destinationDecoration(tester).errorText, 'Nenhuma rota encontrada');
     expect(rideMap(tester).route, isNull);
-    expect(api.requests, isEmpty);
   });
 
   testWidgets('empty and invalid result sets expose a compact field error', (
     tester,
   ) async {
     final geocoder = FakeGeocoder()..respond = (_) async => [];
-    await mount(tester, geocoder, FakeRouter(), FakeRides());
+    await mount(tester, geocoder, FakeRouter());
 
     await submitDestination(tester, 'desconhecido');
     expect(
@@ -295,7 +274,7 @@ void main() {
   ) async {
     final geocoder = FakeGeocoder()..respond = (_) async => [origin];
     final router = FakeRouter();
-    await mount(tester, geocoder, router, FakeRides());
+    await mount(tester, geocoder, router);
 
     await submitDestination(tester, origin.label);
 
@@ -316,7 +295,7 @@ void main() {
       final route = Completer<RoadRoute>();
       if (operation == 'search') geocoder.respond = (_) => search.future;
       if (operation == 'route') router.respond = (_, _) => route.future;
-      await mount(tester, geocoder, router, FakeRides());
+      await mount(tester, geocoder, router);
       await submitDestination(tester, 'destino', settle: false);
 
       await tester.pumpWidget(const SizedBox());

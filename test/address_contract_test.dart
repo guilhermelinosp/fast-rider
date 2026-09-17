@@ -1,5 +1,3 @@
-import 'package:fast_rider/api/ride_api_client.dart';
-import 'package:fast_rider/models/ride.dart';
 import 'package:fast_rider/pages/ride_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -13,12 +11,6 @@ class OfflineTiles extends TileProvider {
       MemoryImage(TileProvider.transparentImage);
 }
 
-class NoRides implements RideApiClient {
-  @override
-  Future<RideResponse> createRide(RideRequest request) =>
-      throw StateError('No ride should be submitted');
-}
-
 void main() {
   testWidgets(
     'destination is the only editable input; origin is never manual',
@@ -26,8 +18,6 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: RidePage(
-            apiClient: NoRides(),
-            riderId: 'rider',
             tileProvider: OfflineTiles(),
             currentLocation: FakeLocation(),
           ),
@@ -46,8 +36,6 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: RidePage(
-          apiClient: NoRides(),
-          riderId: 'rider',
           tileProvider: OfflineTiles(),
           currentLocation: FakeLocation(),
         ),

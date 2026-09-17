@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:fast_rider/api/location_services.dart';
+import 'package:fast_rider/config/app_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -31,7 +32,6 @@ final routeJson = {
   ],
 };
 
-// AppConfig has no defaults; tests supply explicit endpoints/user-agent.
 const geoBaseUrl = 'https://geo.example/search';
 const routeBaseUrl = 'https://route.example/';
 const testUserAgent = 'FastRiderTests/1.0';
@@ -52,6 +52,46 @@ Matcher failure(String code) =>
     throwsA(isA<LocationException>().having((e) => e.code, 'code', code));
 
 void main() {
+  test(
+    'AppConfig endpoints and MAPS_USER_AGENT drive both HTTP clients',
+    () async {
+      const config = AppConfig(
+        geocodingUrl: 'https://configured.example/geocode',
+        routingUrl: 'https://configured.example/osrm',
+        tileUrl: 'https://tiles.example/{z}/{x}/{y}.png',
+        mapsUserAgent: 'ConfiguredRider/2.0',
+      );
+      final requests = <http.Request>[];
+      final geocoder = NominatimGeocoder(
+        config: config,
+        scheduler: TestClock().scheduler(),
+        client: MockClient((request) async {
+          requests.add(request);
+          return http.Response('[]', 200);
+        }),
+      );
+      final router = OsrmRouter(
+        config: config,
+        client: MockClient((request) async {
+          requests.add(request);
+          return http.Response(jsonEncode(routeJson), 200);
+        }),
+      );
+
+      await geocoder.search('Sé');
+      await router.route(a, b);
+
+      expect(requests.map((request) => request.url.host), [
+        'configured.example',
+        'configured.example',
+      ]);
+      expect(
+        requests.map((request) => request.headers['user-agent']),
+        everyElement('ConfiguredRider/2.0'),
+      );
+    },
+  );
+
   test('explicit geocoding encodes query, identifies app, parses and caches normalized searches', () async {
     final requests = <http.Request>[];
     final client = NominatimGeocoder(

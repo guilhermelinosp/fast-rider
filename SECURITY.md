@@ -1,21 +1,30 @@
-# Security Policy
+# Política de Segurança
 
-## Supported Versions
+## Versões suportadas
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+O projeto está na linha 1.x (atualmente 1.0.0). Correções de segurança são
+direcionadas à versão publicada mais recente dessa linha.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Versão | Suporte de segurança |
+|---|---|
+| 1.x (release mais recente) | ✅ |
+| < 1.0 | ❌ |
 
-## Reporting a Vulnerability
+## Reportar uma vulnerabilidade
 
-Use this section to tell people how to report a vulnerability.
+Reporte vulnerabilidades de forma privada pelo
+[GitHub Security Advisory / Private Vulnerability Reporting](https://github.com/guilhermelinosp/fast-rider/security/advisories/new).
+Inclua, quando possível:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+- versão ou commit afetado;
+- impacto observado;
+- passos mínimos para reprodução;
+- evidências e uma sugestão de mitigação, se disponível.
+
+Não abra issue, discussion ou pull request público com detalhes exploráveis,
+credenciais, tokens, dados pessoais ou qualquer outro segredo. Também não inclua
+segredos no relatório privado; substitua-os por valores fictícios ou redigidos.
+
+A triagem, pedidos de informação e a decisão sobre correção e divulgação serão
+comunicados no próprio advisory. O prazo depende da gravidade e da complexidade
+da correção; detalhes só devem ser publicados após coordenação com o mantenedor.

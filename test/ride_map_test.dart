@@ -13,6 +13,22 @@ import 'address_contract_test.dart' show OfflineTiles;
 const _pickup = LatLng(-23.550520, -46.633308);
 const _destination = LatLng(-23.561684, -46.655981);
 const _midpoint = LatLng(-23.555000, -46.640000);
+const _tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const _tilePackage = 'com.guilhermelino.fastrider';
+
+RideMap _map({
+  LatLng? pickup,
+  LatLng? destination,
+  RoadRoute? route,
+  TileProvider? tileProvider,
+}) => RideMap(
+  tileUrl: _tileUrl,
+  tileUserAgentPackageName: _tilePackage,
+  pickup: pickup,
+  destination: destination,
+  route: route,
+  tileProvider: tileProvider,
+);
 
 RoadRoute _route({bool includeMidpoint = true}) => RoadRoute(
   points: [_pickup, if (includeMidpoint) _midpoint, _destination],
@@ -33,7 +49,7 @@ Future<void> _mount(WidgetTester tester, RideMap map) async {
 
 void main() {
   testWidgets('empty map has no markers and no route polyline', (tester) async {
-    await _mount(tester, RideMap(tileProvider: OfflineTiles()));
+    await _mount(tester, _map(tileProvider: OfflineTiles()));
     expect(find.byType(MarkerLayer), findsOneWidget);
     expect(
       tester.widget<MarkerLayer>(find.byType(MarkerLayer)).markers,
@@ -49,7 +65,7 @@ void main() {
   ) async {
     await _mount(
       tester,
-      RideMap(
+      _map(
         pickup: _pickup,
         destination: _destination,
         route: _route(),
@@ -67,7 +83,7 @@ void main() {
   testWidgets('map is display only: no interaction flags and no tap handler', (
     tester,
   ) async {
-    await _mount(tester, RideMap(tileProvider: OfflineTiles()));
+    await _mount(tester, _map(tileProvider: OfflineTiles()));
     final options = tester.widget<FlutterMap>(find.byType(FlutterMap)).options;
     expect(options.interactionOptions.flags, InteractiveFlag.none);
     expect(options.onTap, isNull);
@@ -77,17 +93,17 @@ void main() {
   testWidgets('attribution is visible compact plain text and not clickable', (
     tester,
   ) async {
-    await _mount(tester, RideMap(tileProvider: OfflineTiles()));
+    await _mount(tester, _map(tileProvider: OfflineTiles()));
 
     final attribution = find.byKey(const Key('osm_attribution'));
     final surface = find.byKey(const Key('osm_attribution_surface'));
     expect(attribution, findsOneWidget);
-    expect(find.text('© OpenStreetMap'), findsOneWidget);
+    expect(find.text('© OpenStreetMap contributors · ODbL'), findsOneWidget);
 
     final label = tester.widget<Text>(attribution);
-    expect(label.data, '© OpenStreetMap');
-    expect(label.style?.fontSize, 9);
-    expect(label.style?.color, Colors.white.withValues(alpha: 0.72));
+    expect(label.data, '© OpenStreetMap contributors · ODbL');
+    expect(label.style?.fontSize, 10);
+    expect(label.style?.color, Colors.white.withValues(alpha: 0.85));
 
     final background = tester.widget<Material>(surface);
     expect(background.color, Colors.black.withValues(alpha: 0.55));
@@ -122,7 +138,7 @@ void main() {
   ) async {
     await _mount(
       tester,
-      RideMap(
+      _map(
         pickup: _pickup,
         destination: _destination,
         route: _route(),
@@ -170,7 +186,7 @@ void main() {
   ) async {
     await _mount(
       tester,
-      RideMap(
+      _map(
         pickup: _pickup,
         destination: _destination,
         route: _route(),
@@ -184,7 +200,7 @@ void main() {
         home: Scaffold(
           body: SizedBox(
             height: 500,
-            child: RideMap(
+            child: _map(
               pickup: _destination,
               destination: _pickup,
               route: _route(includeMidpoint: false),
@@ -201,10 +217,7 @@ void main() {
   testWidgets('a supplied GPS origin is the initial map center', (
     tester,
   ) async {
-    await _mount(
-      tester,
-      RideMap(pickup: _pickup, tileProvider: OfflineTiles()),
-    );
+    await _mount(tester, _map(pickup: _pickup, tileProvider: OfflineTiles()));
     final options = tester.widget<FlutterMap>(find.byType(FlutterMap)).options;
     expect(options.initialCenter, _pickup);
     expect(find.text('A'), findsOneWidget);

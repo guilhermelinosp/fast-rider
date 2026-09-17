@@ -1,179 +1,184 @@
 # Fast Rider 🛵
 
 [![CI](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml/badge.svg)](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml)
-
-Menor vertical slice Flutter do Rider: busca endereços, calcula uma rota viária
-e exibe uma prévia OpenStreetMap antes de solicitar uma corrida ao backend
-configurado. O app usa `StatefulWidget`/`setState` e não usa state management
-ou repository pattern externo.
-
 [![Design no Figma](https://img.shields.io/badge/Design-Figma-purple)](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245)
 
-## Selecionar e solicitar
+Fast Rider é uma prévia mínima de rota para iOS. A tela tem um mapa
+`FlutterMap` em tons de cinza ocupando todo o espaço e um único `TextField`
+flutuante na parte inferior para o destino. A localização pontual do aparelho
+define a origem; ao enviar o destino pelo teclado, o app busca o primeiro
+resultado válido e desenha a rota viária calculada pelo OSRM.
 
-1. O mapa inicia em São Paulo, sem pontos pré-selecionados.
-2. Digite rua, número e cidade em **A — Origem** e use **Buscar origem** (ou a
-   ação de busca do teclado). Digitar não envia requisições: não há autocomplete.
-3. Escolha explicitamente um resultado do Nominatim; repita para **B — Destino**.
-   Nenhum resultado é selecionado automaticamente. Editar um endereço invalida
-   sua seleção e a rota; respostas antigas não sobrescrevem entradas novas.
-4. Com dois pontos distintos confirmados, o OSRM calcula uma rota `driving`.
-   O mapa é **somente leitura**, sem toque para selecionar, arrasto, zoom ou
-   rotação. Exibe marcadores A/B, a geometria viária e enquadramento automático.
-   Distância e duração são estimativas. Falhas não viram uma linha reta:
-   **Tentar rota novamente** permite nova tentativa manual.
-5. **Solicitar corrida** só é habilitado com rota válida. Durante o envio,
-   endereços e botão ficam bloqueados. O sucesso exibe o ID e mantém o bloqueio.
-   **Nova solicitação** limpa a seleção sem enviar outra corrida automaticamente.
-   Erros preservam a rota e mostram detalhes da API; não há retry automático.
+A versão 1.0.0 termina na visualização da rota: não envia pedidos nem mantém
+conta ou identidade persistente no aparelho.
 
-O mapa usa `flutter_map`, tiles HTTPS de `tile.openstreetmap.org`, User-Agent
-identificado como `fast_rider` e atribuição obrigatória e legível com link para
-[© OpenStreetMap](https://www.openstreetmap.org/copyright).
-O texto tem fundo opaco de alto contraste, suporta ampliação e o botão tem
-altura mínima de 48 pontos lógicos. Se o navegador falhar, a URL da licença é
-exibida na tela. Falhas de tiles exibem aviso sem remover marcadores, rota ou
-atribuição.
-Requer conexão. Não faz download offline/prefetch em massa; o cache padrão da
-biblioteca é mantido. Para produção, revisar a
-[política de tiles OSM](https://operations.osmfoundation.org/policies/tiles/)
-e contratar um provedor adequado ao volume/SLA, se necessário.
+## Como funciona
 
-### Busca, rota e privacidade
+1. Ao abrir, o app solicita permissão de localização durante o uso e faz uma
+   captura pontual do GPS. A origem centraliza o mapa e recebe o marcador **A**.
+2. Digite rua, número e cidade em **Destino**. Digitar não dispara rede nem
+   autocomplete; pressione **Enter/Buscar** para iniciar a busca no Nominatim.
+3. O primeiro resultado com coordenadas válidas é selecionado automaticamente
+   e recebe o marcador **B**. Não existe uma etapa de escolha manual.
+4. Com origem e destino válidos e diferentes, o app consulta uma rota OSRM no
+   perfil `driving`, desenha sua geometria e mostra distância e duração
+   estimadas.
+5. A câmera enquadra automaticamente origem, destino e rota. O mapa é somente
+   para exibição: toque, seleção, arrasto, zoom e rotação estão desabilitados.
 
-- Texto do endereço é enviado ao Nominatim **somente na busca explícita**;
-  coordenadas confirmadas são enviadas ao OSRM para calcular a rota.
-- Nominatim: fila compartilhada no isolate, intervalo mínimo de um segundo
-  entre inícios, deduplicação de buscas pendentes e cache em memória de até
-  100 consultas por dez minutos. HTTP 429/503 respeita `Retry-After` antes de
-  futuras buscas (sem repetir automaticamente a requisição que falhou).
-- Endpoints configuráveis via `--dart-define`: `GEOCODING_URL`, `ROUTING_URL`,
-  `MAPS_USER_AGENT`, `GEOCODING_ATTRIBUTION` e `ROUTING_ATTRIBUTION`. Todas as
-  chaves são **obrigatórias** — o app não inicia sem elas.
-- Serviços públicos de demonstração, sem SLA. Antes de distribuir, revisar a
-  [política Nominatim](https://operations.osmfoundation.org/policies/nominatim/),
-  limites agregados entre usuários e identificação/contato do app; considerar
-  proxy ou provedor contratado. Não enviar informações confidenciais.
-- O POST de corrida permanece independente desses provedores: não inclui
-  texto de endereços, geometria, distância ou duração, apenas as quatro coordenadas.
+Se a primeira captura de localização falhar, o próximo envio pelo teclado faz
+uma nova tentativa pontual. Respostas assíncronas antigas de GPS, geocodificação
+ou rota são descartadas quando deixam de corresponder ao estado atual. Erros de
+serviço aparecem no campo; falhas de tiles geram uma única `SnackBar` sem
+remover os marcadores ou a rota.
 
-## Contrato HTTP
+## Arquitetura
 
-O app faz:
+O slice mantém estado local com `StatefulWidget`/`setState` e interfaces pequenas
+para permitir testes sem rede ou sensores reais:
 
-```http
-POST {baseUrl}/api/v1/rides
-Content-Type: application/json
-rider_id: <UUID v4 do usuário dev>
-```
+- `lib/main.dart`: valida `AppConfig` e monta o app.
+- `lib/pages/ride_page.dart`: coordena GPS, destino, rota e estados assíncronos.
+- `lib/location/current_location.dart`: captura pontual, valida precisão e idade
+  da posição e usa um `MethodChannel` cancelável no iOS.
+- `lib/api/location_services.dart`: clientes compatíveis com Nominatim e OSRM.
+- `lib/widgets/ride_map.dart`: mapa em tons de cinza, marcadores, polilinha,
+  enquadramento automático e atribuição.
 
-Body:
+## Plataformas
 
-```json
-{
-  "pickup_latitude": -23.55052,
-  "pickup_longitude": -46.633308,
-  "destination_latitude": -23.561684,
-  "destination_longitude": -46.655981
-}
-```
+O projeto oferece target **iOS** e é desenvolvido e validado no iOS Simulator.
+O bundle ID do app é `com.guilhermelino.fastrider`.
 
-O sucesso esperado é `201` com JSON contendo `id`, `rider_id`, as quatro
-coordenadas e seus valores. Qualquer status `2xx` é aceito e parseado.
+Pré-requisitos:
 
-O app gera um UUID v4 aleatório na primeira instalação e o persiste em
-`shared_preferences`. A mesma identidade é reutilizada em todas as
-requisições; reinstalar o app gera uma nova identidade. O valor é enviado no
-header `rider_id`, nunca no JSON body. Não há autenticação.
+- Flutter stable compatível com o SDK Dart declarado em `pubspec.yaml`;
+- Xcode com um runtime do iOS Simulator instalado;
+- conexão de rede para geocodificação, rota e tiles.
 
-Erros HTTP preservam `error.code`, `error.message` e `error.requestId` (também
-aceita `request_id`), além de `statusCode`. Timeout, conexão e resposta JSON
-malformada recebem códigos locais (`timeout`, `connection_error` e
-`malformed_response`).
+## Executar sem configuração
 
-## Plataformas suportadas
-
-> **iOS apenas.** O target Android foi removido do projeto.
-
-O desenvolvimento e a validação são feitos no **iOS Simulator**.
-
-## Configuração local via `.env`
-
-Todas as chaves são lidas em tempo de compilação via `--dart-define-from-file`
-e centralizadas em `lib/config/app_config.dart`. **Todas são obrigatórias** —
-`AppConfig.validate()` falha no startup se alguma estiver ausente, listando
-exatamente quais faltam.
+Os provedores públicos têm defaults válidos. Nenhum `dart-define` ou arquivo
+`.env` é necessário para iniciar:
 
 ```bash
-cp .env.example .env   # preencha TODOS os valores (sem commitar .env)
-flutter run --dart-define-from-file=.env
-flutter build ios --dart-define-from-file=.env
+flutter pub get
+flutter run
 ```
 
-<<<<<<< HEAD
-Chaves suportadas (todas opcionais em runtime, com defaults; **`API_BASE_URL` é
-a única sem valor padrão embutido e deve ser definida** para builds de
-produção):
-=======
-| Chave | Uso |
-|---|---|
-| `API_BASE_URL` | Backend de corridas |
-| `GEOCODING_URL` | Busca de endereços (Nominatim-compatible `/search`) |
-| `ROUTING_URL` | Cálculo de rota (OSRM-compatible) |
-| `MAPS_USER_AGENT` | Identificação OSM (ex.: `fast_rider/1.0 (dev)`) |
-| `GEOCODING_ATTRIBUTION` | Atribuição do mapa (ex.: `Busca: Nominatim`) |
-| `ROUTING_ATTRIBUTION` | Atribuição do mapa (ex.: `Rota: OSRM`) |
->>>>>>> origin/main
+No Simulator, escolha uma localização em **Features > Location**, conceda a
+permissão durante o uso quando solicitada e, se houver mais de um device:
 
-No iOS Simulator, `API_BASE_URL` aponta tipicamente para
-`http://localhost:8080`; em dispositivo real, use o IP do host na rede.
+```bash
+open -a Simulator
+flutter devices
+flutter run -d <device-id>
+```
 
-> **Importante:** valores compilados no app não são segredos reais — podem ser
-> extraídos do binário. Use `.env` para **configuração** (URLs, user-agent).
-> API keys/tokens devem viver no backend, nunca no cliente.
+Para apenas validar o build do Simulator:
+
+```bash
+flutter build ios --simulator --no-codesign
+```
+
+## Overrides opcionais
+
+`lib/config/app_config.dart` centraliza quatro overrides opcionais de
+compilação. Para usá-los, copie o exemplo e altere somente o necessário:
+
+```bash
+cp .env.example .env
+flutter run --dart-define-from-file=.env
+```
+
+| Nome | Default | Uso |
+|---|---|---|
+| `GEOCODING_URL` | `https://nominatim.openstreetmap.org/search` | Endpoint `/search` compatível com Nominatim |
+| `ROUTING_URL` | `https://router.project-osrm.org` | Endpoint compatível com OSRM |
+| `MAP_TILE_URL` | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` | Template de tiles raster; exige `{z}`, `{x}` e `{y}` |
+| `MAPS_USER_AGENT` | `com.guilhermelino.fastrider/1.0.0` | Identificação HTTP usada na geocodificação e na rota |
+
+O package name usado por `flutter_map` no User-Agent dos tiles é fixo em
+`com.guilhermelino.fastrider`; ele não é uma chave de configuração. Overrides
+malformados falham cedo na validação, mas valores omitidos usam os defaults.
+
+Essas URLs e identificadores são configuração pública, não segredos. Valores
+compilados podem ser extraídos do app; não coloque tokens, credenciais ou outras
+informações sigilosas em `.env` ou em `dart-define`.
+
+## Provedores, atribuição e limites
+
+- Os tiles vêm diretamente de `tile.openstreetmap.org` por default.
+  `MAP_TILE_URL` permite trocar por um provedor raster compatível.
+- A atribuição sempre visível é texto simples e não clicável:
+  `© OpenStreetMap contributors · ODbL`.
+- O servidor público de tiles deve ser usado de acordo com a
+  [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/).
+  Ele não é uma solução para alto tráfego, garantia de disponibilidade ou SLA;
+  distribuições com volume relevante devem usar infraestrutura própria ou um
+  provedor apropriado.
+- O Nominatim público também exige respeito à
+  [Usage Policy](https://operations.osmfoundation.org/policies/nominatim/).
+  O cliente serializa inícios de busca com intervalo mínimo de um segundo,
+  deduplica consultas pendentes e mantém no máximo 100 resultados em memória
+  por dez minutos. Não há repetição automática da requisição que falhou.
+- O endpoint público do OSRM é adequado somente para demonstração e não oferece
+  SLA. A rota `driving` é uma estimativa para carro, não navegação turn-by-turn
+  nem uma rota específica para motocicleta.
+
+## Privacidade
+
+- O iOS recebe apenas a descrição de uso `when-in-use`. Cada tentativa pede uma
+  posição atual; não há stream, localização em segundo plano, posição conhecida
+  anterior nem rastreamento contínuo.
+- O texto do destino é enviado ao serviço de geocodificação somente após
+  **Enter/Buscar**.
+- As coordenadas de origem e destino são enviadas ao serviço de roteamento.
+- Requisições de tiles revelam ao provedor os tiles visualizados e metadados de
+  rede usuais, como endereço IP e User-Agent.
+- Resultados e rota permanecem apenas em memória durante a execução. O app não
+  faz geocodificação reversa nem persiste histórico de localização ou destino.
+
+Antes de trocar endpoints, revise a política de privacidade e os termos do novo
+provedor. Não digite informações confidenciais no campo de destino.
 
 ## Testes e qualidade
 
 ```bash
-dart format .
+dart format --output=none --set-exit-if-changed .
 flutter analyze
-flutter test
+flutter test --coverage
+flutter build ios --simulator --no-codesign
 ```
 
-As suítes (`address_flow`, `address_contract`, `location_services`,
-`ride_api_client`, `ride_models`, `rider_identity`, `ride_map`) cobrem contrato
-HTTP, parsing/erros, identidade, busca explícita/desambiguação, cache/limites,
-rota e respostas tardias, envio duplicado, retry manual, sucesso e nova solicitação.
-Incluem fluxo completo em tela 320×568 com texto 1×/2×, mapa read-only,
-marcadores/polilinha, falhas de tiles e atribuição/licença.
-Usam clientes falsos/mockados, tiles em memória e navegador simulado, sem
-acessar os provedores ou criar corridas reais. Para cobertura: `flutter test --coverage`.
+A suíte atual cobre:
 
-## Contribuindo
+- startup e `AppConfig` com defaults, sem `dart-define`, além de overrides
+  inválidos;
+- permissão/GPS pontual, validação de precisão e idade, timeout, cancelamento e
+  o `MethodChannel` iOS;
+- busca explícita, seleção do primeiro resultado válido, rota e descarte de
+  respostas assíncronas antigas;
+- mapa sem interação, atribuição, erro de tiles e `SnackBar`;
+- layouts compactos, landscape, teclado, safe areas e ampliação de texto.
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md) para guia de desenvolvimento,
-conventional commits e o fluxo com hooks locais ([lefthook](https://lefthook.dev)).
+Os testes Dart usam fakes, clientes HTTP simulados e tiles em memória; não
+acessam provedores públicos. A validação da versão 1.0.0 concluiu com
+`flutter analyze` sem issues, 83/83 testes Dart, 1/1 XCTest nativo e build do
+iOS Simulator.
 
-## Limitações
+## Contribuindo e segurança
 
-- Não há GPS, navegação turn-by-turn ou rota específica para moto: o perfil
-  OSRM `driving` é uma prévia para carro. Busca e rota dependem da rede;
-  identidade dev é persistida em `shared_preferences`, sem autenticação.
-- O bloqueio de duplicatas é local à tela. O contrato atual não fornece chave
-  de idempotência: após timeout/conexão perdida/resposta inválida, uma corrida
-  pode ter sido criada. Confira no backend antes de repetir a solicitação.
-- HTTP sem TLS é apenas para o slice local; produção deve usar HTTPS e
-  configuração de segurança adequada.
+Veja [CONTRIBUTING.md](CONTRIBUTING.md) para o fluxo de desenvolvimento e
+[SECURITY.md](SECURITY.md) para reportar vulnerabilidades de forma privada.
 
 ## Licença
 
-**Proprietária — Todos os direitos reservados.** Este projeto é de propriedade
-exclusiva de seu autor e **não é open source**: é proibida a reprodução,
-distribuição, modificação ou replicação do código e do design sem autorização
-prévia e por escrito. Veja [LICENSE](LICENSE).
+**Proprietária — todos os direitos reservados.** O projeto não é open source;
+uso, cópia, modificação ou distribuição exigem autorização prévia e por escrito.
+Veja [LICENSE](LICENSE).
 
 ## Design
 
-O design de interface está disponível no Figma:
-
-[https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245)
+O design de interface está disponível no
+[Figma](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245).

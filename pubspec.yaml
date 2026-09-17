@@ -1,5 +1,5 @@
 name: fast_rider
-description: "Minimal Rider vertical slice for creating rides."
+description: 'Minimal destination route preview using one-shot GPS.'
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -28,18 +28,8 @@ dependencies:
     sdk: flutter
   http: ^1.5.0
   flutter_map: ^8.2.2
-  latlong2: ^0.9.1
+  latlong2: ^0.10.1
   geolocator: ^14.0.3
-  shared_preferences: ^2.5.3
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-
-# objective_c 9.6.1's build hook references Architecture.arm64e, absent from
-# code_assets 2.0.0. Keep this compatible release until upstream fixes the hook.
-dependency_overrides:
-  objective_c: 9.5.0
 
 dev_dependencies:
   flutter_test:

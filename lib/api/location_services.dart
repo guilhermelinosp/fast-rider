@@ -146,13 +146,14 @@ void _checkStatus(http.Response response) {
 /// Cache is bounded, memory-only, ten minutes; failed requests are never cached.
 class NominatimGeocoder implements Geocoder {
   NominatimGeocoder({
+    AppConfig config = const AppConfig(),
     String? baseUrl,
     String? userAgent,
     http.Client? client,
     SearchScheduler? scheduler,
     this.timeout = const Duration(seconds: 10),
-  }) : baseUrl = baseUrl ?? AppConfig.geocodingUrl,
-       userAgent = userAgent ?? AppConfig.mapsUserAgent,
+  }) : baseUrl = baseUrl ?? config.geocodingUrl,
+       userAgent = userAgent ?? config.mapsUserAgent,
        _client = client ?? http.Client(),
        _ownsClient = client == null,
        scheduler = scheduler ?? SearchScheduler.shared;
@@ -266,12 +267,13 @@ class NominatimGeocoder implements Geocoder {
 /// OSRM-compatible driving route. Never substitutes a straight line for failure.
 class OsrmRouter implements RoadRouter {
   OsrmRouter({
+    AppConfig config = const AppConfig(),
     String? baseUrl,
     String? userAgent,
     http.Client? client,
     this.timeout = const Duration(seconds: 15),
-  }) : baseUrl = baseUrl ?? AppConfig.routingUrl,
-       userAgent = userAgent ?? AppConfig.mapsUserAgent,
+  }) : baseUrl = baseUrl ?? config.routingUrl,
+       userAgent = userAgent ?? config.mapsUserAgent,
        _client = client ?? http.Client(),
        _ownsClient = client == null;
 
