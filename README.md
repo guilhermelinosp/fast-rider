@@ -1,6 +1,6 @@
 # Fast Rider 🛵
 
-[![CI](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml/badge.svg)](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pipeline.yml)
+[![CI](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pr-check.yml/badge.svg)](https://github.com/guilhermelinosp/fast-rider/actions/workflows/pr-check.yml)
 [![Design no Figma](https://img.shields.io/badge/Design-Figma-purple)](https://www.figma.com/design/5C9coBRcFFtoxZVjVGsyt2/Fast-Rider?m=auto&fuid=1190329279918509245)
 
 Fast Rider é uma prévia mínima de rota para iOS. A tela tem um mapa
